@@ -2,7 +2,6 @@
 
 import 'bootstrap';
 
-import _ from 'underscore';
 import Backbone from 'backbone';
 import moment from 'moment';
 
@@ -118,10 +117,10 @@ class CourseEntitlementView extends Backbone.View {
         course_run_id: this.currentSessionSelection,
       }),
       statusCode: {
-        201: _.bind(this.enrollSuccess, this),
-        204: _.bind(this.unenrollSuccess, this),
+        201: this.enrollSuccess.bind(this),
+        204: this.unenrollSuccess.bind(this),
       },
-      error: _.bind(this.enrollError, this),
+      error: this.enrollError.bind(this),
     });
   }
 
@@ -379,7 +378,7 @@ class CourseEntitlementView extends Backbone.View {
     const dateFormat = moment.localeData().longDateFormat('L').indexOf('DD') >
       moment.localeData().longDateFormat('L').indexOf('MM') ? 'MMMM D, YYYY' : 'D MMMM, YYYY';
 
-    return _.map(formattedSessionData, (session) => {
+    return formattedSessionData.map((session) => {
       const formattedSession = session;
       startDate = CourseEntitlementView.formatDate(formattedSession.start, dateFormat);
       endDate = CourseEntitlementView.formatDate(formattedSession.end, dateFormat);
@@ -393,7 +392,7 @@ class CourseEntitlementView extends Backbone.View {
         pacing_type: formattedSession.pacing_type,
       });
       return formattedSession;
-    }, this);
+    });
   }
 
   static formatDate(date, dateFormat) {

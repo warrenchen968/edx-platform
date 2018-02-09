@@ -1,6 +1,5 @@
 /* globals gettext */
 
-import _ from 'underscore';
 import Backbone from 'backbone';
 
 import DateUtils from 'edx-ui-toolkit/js/utils/date-utils';
@@ -18,7 +17,7 @@ class CourseCardModel extends Backbone.Model {
   }
 
   getCourseRun(course) {
-    const enrolledCourseRun = _.findWhere(course.course_runs, { is_enrolled: true });
+    const enrolledCourseRun = course.course_runs.find(run => run.is_enrolled);
     const openEnrollmentCourseRuns = this.getEnrollableCourseRuns();
     let desiredCourseRun;
 
@@ -41,7 +40,7 @@ class CourseCardModel extends Backbone.Model {
 
   isEnrolledInSession() {
     // Returns true if the user is currently enrolled in a session of the course
-    return _.findWhere(this.context.course_runs, { is_enrolled: true }) !== undefined;
+    return this.context.course_runs.find(run => run.is_enrolled) !== undefined;
   }
 
   static getUnselectedCourseRun(courseRuns) {
@@ -62,11 +61,12 @@ class CourseCardModel extends Backbone.Model {
   }
 
   getEnrollableCourseRuns() {
-    const rawCourseRuns = _.where(this.context.course_runs, {
-      is_enrollment_open: true,
-      is_enrolled: false,
-      is_course_ended: false,
-      status: 'published',
+    // eslint-disable-next-line arrow-body-style
+    const rawCourseRuns = this.context.course_runs.filter((run) => {
+      return run.is_enrollment_open &&
+             !run.is_enrolled &&
+             !run.is_course_ended &&
+             run.status === 'published';
     });
 
     // Deep copy to avoid mutating this.context.
@@ -75,7 +75,7 @@ class CourseCardModel extends Backbone.Model {
     // These are raw course runs from the server. The start
     // dates are ISO-8601 formatted strings that need to be
     // prepped for display.
-    _.each(enrollableCourseRuns, (courseRun) => {
+    enrollableCourseRuns.forEach((courseRun) => {
       // eslint-disable-next-line no-param-reassign
       courseRun.start_date = CourseCardModel.formatDate(courseRun.start);
       // eslint-disable-next-line no-param-reassign
@@ -90,11 +90,12 @@ class CourseCardModel extends Backbone.Model {
   }
 
   getUpcomingCourseRuns() {
-    return _.where(this.context.course_runs, {
-      is_enrollment_open: false,
-      is_enrolled: false,
-      is_course_ended: false,
-      status: 'published',
+    // eslint-disable-next-line arrow-body-style
+    return this.context.course_runs.filter((run) => {
+      return !run.is_enrollment_open &&
+             !run.is_enrolled &&
+             !run.is_course_ended &&
+             run.status === 'published';
     });
   }
 
@@ -117,11 +118,9 @@ class CourseCardModel extends Backbone.Model {
   static getCertificatePriceString(run) {
     if ('seats' in run && run.seats.length) {
       // eslint-disable-next-line consistent-return
-      const upgradeableSeats = _.filter(run.seats, (seat) => {
+      const upgradeableSeats = run.seats.filter((seat) => {
         const upgradeableSeatTypes = ['verified', 'professional', 'no-id-professional', 'credit'];
-        if (upgradeableSeatTypes.indexOf(seat.type) >= 0) {
-          return seat;
-        }
+        return upgradeableSeatTypes.indexOf(seat.type) >= 0;
       });
       if (upgradeableSeats.length > 0) {
         const upgradeableSeat = upgradeableSeats[0];
@@ -224,10 +223,10 @@ class CourseCardModel extends Backbone.Model {
   }
 
   updateCourseRun(courseRunKey) {
-    const selectedCourseRun = _.findWhere(this.get('course_runs'), { key: courseRunKey });
+    const selectedCourseRun = this.get('course_runs').find(run => run.key === courseRunKey);
     if (selectedCourseRun) {
       // Update the current context to set the course run to the enrolled state
-      _.each(this.context.course_runs, (run) => {
+      this.context.course_runs.forEach((run) => {
         // eslint-disable-next-line no-param-reassign
         if (run.key === selectedCourseRun.key) run.is_enrolled = true;
       });
