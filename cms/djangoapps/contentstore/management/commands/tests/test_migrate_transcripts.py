@@ -183,10 +183,10 @@ class MigrateTranscripts(ModuleStoreTestCase):
         expected_log = (
             (LOGGER_NAME,
              'INFO',
-             u'[Transcript migration] process for course org.4/course_4/Run_4 started'),
+             u'[Transcript migration] process for course {} started'.format(unicode(self.course.id))),
             (LOGGER_NAME,
              'INFO',
-             '[Transcript migration] process for video i4x://org.4/course_4/video/video_5 started'),
+             '[Transcript migration] process for video {} started'.format(unicode(self.video_descriptor.location))),
             (LOGGER_NAME,
              'INFO',
              u'Already pushed transcript of language hr found: False '),
@@ -195,13 +195,14 @@ class MigrateTranscripts(ModuleStoreTestCase):
              u'Already pushed transcript of language ge found: False '),
             (LOGGER_NAME,
              'INFO',
-             '[Transcript migration] process for video i4x://org.4/course_4/video/video_5 ended'),
+             '[Transcript migration] process for video {} ended'.format(unicode(self.video_descriptor.location))),
             (LOGGER_NAME,
              'INFO',
-             u'[Transcript migration] process for course org.4/course_4/Run_4 ended'),
+             u'[Transcript migration] process for course {} ended'.format(unicode(self.course.id))),
             (LOGGER_NAME,
              'INFO',
-             'Migration result: Language hr transcript of video test_edx_video_id will be migrated\nLanguage ge transcript of video test_edx_video_id will be migrated')
+             'Migration result: Language hr transcript of video test_edx_video_id will be migrated'
+             '\nLanguage ge transcript of video test_edx_video_id will be migrated')
         )
 
         with LogCapture(LOGGER_NAME, level=logging.INFO) as logger:
