@@ -253,7 +253,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             cls.vertical1 = ItemFactory.create(
                 parent=cls.chapter,
                 category="vertical",
-                group_access={ENROLLMENT_TRACK_PARTITION_ID: [2]}, # 2
+                group_access={ENROLLMENT_TRACK_PARTITION_ID: [2]},  # 2 seems to be the value for verified track.  Where is this set?
                 # TODO: Limit this vertical to verified track
             )
             #cls.vertical1.group_access[] = group_ids
