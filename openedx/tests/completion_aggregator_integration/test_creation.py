@@ -12,6 +12,7 @@ from completion_aggregator.models import Aggregator
 import pytest
 
 from course_modes.models import CourseMode
+from openedx.core.djangolib.testing.utils import skip_unless_lms
 from student.models import CourseEnrollment
 from student.tests.factories import UserFactory
 from xmodule.library_tools import LibraryToolsService
@@ -96,6 +97,7 @@ class DAGTestCase(_BaseTestCase):
             cls.store.update_item(cls.vertical2, creator.id)
             cls.store.update_item(cls.course, creator.id)
 
+    @skip_unless_lms
     def test_marking_blocks_complete(self):
         self.submit_completion_for(self.problems[0], 0.75)
         self.assert_expected_values({
@@ -105,6 +107,7 @@ class DAGTestCase(_BaseTestCase):
             self.chapter: (0.75, 6.0),
         })
 
+    @skip_unless_lms
     def test_dag_block_values_summed(self):
         self.submit_completion_for(self.multiparent_problem, 1.0)
         self.assert_expected_values({
@@ -114,6 +117,7 @@ class DAGTestCase(_BaseTestCase):
             self.chapter: (2.0, 6.0),
         })
 
+    @skip_unless_lms
     def test_modify_existing_completion(self):
         """
         After updating already-existing completion values, the new values take
@@ -211,6 +215,7 @@ class LibraryTestCase(_BaseTestCase):
         self.libtools.update_children(lib_content_block, self.user.id)
         return self.store.get_item(lib_content_block.location)
 
+    @skip_unless_lms
     def test_completing_library_content(self):
         for block in self.in_course_blocks:
             self.submit_completion_for(block, 0.75)
@@ -278,6 +283,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
         self.verified_enrollment = CourseEnrollment.enroll(self.user, self.course_key, mode='verified')
         self.audit_enrollment = CourseEnrollment.enroll(self.audit_user, self.course_key, mode='audit')
 
+    @skip_unless_lms
     def test_user_on_track(self):
         self.submit_completion_with_user(self.user, self.problem1, 1.0)
         self.submit_completion_with_user(self.user, self.problem2, 0.5)
@@ -288,6 +294,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             self.chapter: (1.75, 3.0),
         }, user=self.user)
 
+    @skip_unless_lms
     def test_user_off_track(self):
         self.submit_completion_with_user(self.audit_user, self.problem2, 1.0)
         self.assert_expected_values({
@@ -295,6 +302,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             self.chapter: (1.0, 1.0),
         }, user=self.audit_user)
 
+    @skip_unless_lms
     def test_user_upgrades(self):
         self.submit_completion_with_user(self.audit_user, self.problem2, 1.0)
         self.audit_enrollment.update_enrollment(mode='verified')
@@ -303,6 +311,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             self.chapter: (1.0, 3.0),
         }, user=self.audit_user)
 
+    @skip_unless_lms
     def test_user_leaves_track(self):
         self.submit_completion_with_user(self.user, self.problem1, 1.0)
         self.submit_completion_with_user(self.user, self.problem2, 0.5)
