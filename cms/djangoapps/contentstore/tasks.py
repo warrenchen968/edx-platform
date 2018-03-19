@@ -85,7 +85,6 @@ def enqueue_async_migrate_transcripts_tasks(
                 all_courses: Run the command for all courses. Default=False,
                 force_update: Overwrite file in S3. Default=False,
                 commit: Update S3 or dry-run the command to see which transcripts will be affected. Default=False
-     
     """
     store = modulestore()
     kwargs = {
@@ -197,8 +196,9 @@ def async_migrate_transcript_subtask(*args, **kwargs):
             return 'Language {0} transcript of video {1} will be migrated'.format(language_code, video.edx_video_id)
         LOGGER.info("[Transcript migration] process for %s transcript started", language_code)
         try:
-            transcript_content, transcript_name, Transcript_mime_type = get_transcript_from_contentstore(
-                video, language_code, Transcript.SJSON)
+            transcript_info = video.get_transcripts_info()
+            transcript_content, transcript_name, transcript_mime_type = get_transcript_from_contentstore(
+                video, language_code, Transcript.SJSON, transcript_info)
 
             if not clean_video_id(video.edx_video_id):
                 video.edx_video_id = create_external_video('external-video')
