@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile, mkdtemp
 
 from celery.task import task
 from celery.utils.log import get_task_logger
-from celery import chord
+from celery_utils.chordable_django_backend import chord, chord_task
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
@@ -48,7 +48,7 @@ from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import DuplicateCourseError, ItemNotFoundError
 from xmodule.modulestore.xml_exporter import export_course_to_xml, export_library_to_xml
 from xmodule.modulestore.xml_importer import import_course_from_xml, import_library_from_xml
-from celery_utils.persist_on_failure import PersistOnFailureTask
+from celery_utils.persist_on_failure import LoggedPersistOnFailureTask
 from xmodule.video_module.transcripts_utils import Transcript, clean_video_id, get_transcript_from_contentstore
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.exceptions import NotFoundError
@@ -69,6 +69,10 @@ FULL_COURSE_REINDEX_THRESHOLD = 1
 DEFAULT_ALL_COURSES = False
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_COMMIT = False
+
+RETRY_DELAY_SECONDS = 30
+COURSE_LEVEL_TIMEOUT_SECONDS = 1200
+VIDEO_LEVEL_TIMEOUT_SECONDS = 300
 
 
 def enqueue_async_migrate_transcripts_tasks(
@@ -110,7 +114,7 @@ def enqueue_async_migrate_transcripts_tasks(
         LOGGER.exception('Exception: %r', text_type(exc))
 
 
-@task
+@chord_task
 def task_status_callback(results):
     """
         Callback for collating the results of chord.
@@ -118,8 +122,14 @@ def task_status_callback(results):
     return results
 
 
-@task(base=PersistOnFailureTask)
-def async_migrate_transcript(course_key, **kwargs):
+@chord_task(
+    bind=True,
+    base=LoggedPersistOnFailureTask,
+    default_retry_delay=RETRY_DELAY_SECONDS,
+    max_retries=1,
+    time_limit=COURSE_LEVEL_TIMEOUT_SECONDS
+)
+def async_migrate_transcript(self, course_key, **kwargs):
     """
         Migrates the transcripts of all videos in a course as a new celery task.
     """
@@ -127,7 +137,6 @@ def async_migrate_transcript(course_key, **kwargs):
         if not modulestore().get_course(CourseKey.from_string(course_key)):
             raise KeyError(u'Invalid course key: ' + unicode(course_key))
         force_update = kwargs['force_update']
-        commit = kwargs['commit']
         sub_tasks = []
 
         LOGGER.info("[Transcript migration] process for course %s started", course_key)
@@ -183,8 +192,14 @@ def get_videos_from_store(course_key):
     return all_videos
 
 
-@task(base=PersistOnFailureTask)
-def async_migrate_transcript_subtask(*args, **kwargs):
+@chord_task(
+    bind=True,
+    base=LoggedPersistOnFailureTask,
+    default_retry_delay=RETRY_DELAY_SECONDS,
+    max_retries=2,
+    time_limit=VIDEO_LEVEL_TIMEOUT_SECONDS
+)
+def async_migrate_transcript_subtask(self, *args, **kwargs):
     """
          Migrates a transcript of a given video in a course as a new celery task.
     """
