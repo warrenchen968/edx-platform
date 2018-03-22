@@ -77,18 +77,18 @@ VIDEO_LEVEL_TIMEOUT_SECONDS = 300
 
 def enqueue_async_migrate_transcripts_tasks(
         course_ids,
-        all_courses=False,
-        force_update=False,
-        commit=False
+        all_courses=DEFAULT_ALL_COURSES,
+        force_update=DEFAULT_FORCE_UPDATE,
+        commit=DEFAULT_COMMIT
 ):
     """
-            Fires new Celery tasks for all the input courses or for all courses.
+    Fires new Celery tasks for all the input courses or for all courses.
 
-            Arguments:
-                course_ids: Command line course ids as list,
-                all_courses: Run the command for all courses. Default=False,
-                force_update: Overwrite file in S3. Default=False,
-                commit: Update S3 or dry-run the command to see which transcripts will be affected. Default=False
+    Arguments:
+        course_ids: Command line course ids as list,
+        all_courses: Run the command for all courses. Default is False,
+        force_update: Overwrite file in S3. Default is False,
+        commit: Update S3 or dry-run the command to see which transcripts will be affected. Default is False.
     """
     store = modulestore()
     kwargs = {
@@ -109,15 +109,15 @@ def enqueue_async_migrate_transcripts_tasks(
         callback = task_status_callback.s()
         status = chord(tasks)(callback)
         for res in status.get():
-            LOGGER.info("Migration result: %s", '\n'.join(res))
+            LOGGER.info("[Transcript migration] Result: %s", '\n'.join(res))
     except Exception as exc:
-        LOGGER.exception('Exception: %r', text_type(exc))
+        LOGGER.exception('[Transcript migration] Exception: %r', text_type(exc))
 
 
 @chord_task
 def task_status_callback(results):
     """
-        Callback for collating the results of chord.
+    Callback for collating the results of chord.
     """
     return results
 
@@ -131,7 +131,7 @@ def task_status_callback(results):
 )
 def async_migrate_transcript(self, course_key, **kwargs):
     """
-        Migrates the transcripts of all videos in a course as a new celery task.
+    Migrates the transcripts of all videos in a course as a new celery task.
     """
     try:
         if not modulestore().get_course(CourseKey.from_string(course_key)):
@@ -143,17 +143,13 @@ def async_migrate_transcript(self, course_key, **kwargs):
         all_videos = get_videos_from_store(CourseKey.from_string(course_key))
 
         for video in all_videos:
-            other_lang_transcripts = video.transcripts
+            all_lang_transcripts = video.transcripts
             english_transcript = video.sub
             LOGGER.info("[Transcript migration] process for video %s started", video.location)
-            all_language_transcripts = dict({'en': video.sub}, **other_lang_transcripts) if english_transcript\
-                else other_lang_transcripts
-            for lang, name in all_language_transcripts.items():
+            if english_transcript:
+               all_lang_transcripts.update({'en': video.sub})
+            for lang, name in all_lang_transcripts.items():
                 transcript_already_present = is_transcript_available(video.edx_video_id, lang)
-                LOGGER.info("Already pushed transcript of language %s found: %s ",
-                            lang,
-                            transcript_already_present
-                            )
                 if transcript_already_present and force_update:
                     sub_tasks.append(async_migrate_transcript_subtask.s(
                         video, lang, name, True, **kwargs
@@ -168,7 +164,7 @@ def async_migrate_transcript(self, course_key, **kwargs):
         LOGGER.info("[Transcript migration] process for course %s ended", course_key)
         return status.get()
     except Exception as exc:
-        LOGGER.exception('Exception: %r', text_type(exc))
+        LOGGER.exception('[Transcript migration] Exception: %r', text_type(exc))
         return 'Failed: course {course_key} with exception {exception}'.format(
             course_key=course_key,
             exception=text_type(exc)
@@ -177,7 +173,10 @@ def async_migrate_transcript(self, course_key, **kwargs):
 
 def get_videos_from_store(course_key):
     """
-            Function for retrieving all videos in a course.
+    Returns all videos in a course as list.
+
+    Arguments:
+        course_key: CourseKey object
     """
     store = modulestore()
     all_videos = []
@@ -208,7 +207,10 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
         commit = kwargs['commit']
         result = None
         if commit is not True:
-            return 'Language {0} transcript of video {1} will be migrated'.format(language_code, video.edx_video_id)
+            return 'Language {0} transcript of video {1} will be migrated'.format(
+                language_code,
+                video.edx_video_id
+            )
         LOGGER.info("[Transcript migration] process for %s transcript started", language_code)
         try:
             transcript_info = video.get_transcripts_info()
@@ -219,7 +221,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
                 video.edx_video_id = create_external_video('external-video')
                 video.save_with_metadata(user=User.objects.get(username='staff'))
             if video.edx_video_id:
-                result = push_to_s3(
+                result = save_transcript_to_storage(
                     video.edx_video_id,
                     language_code,
                     transcript_content,
@@ -227,7 +229,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
                     force_update
                 )
         except NotFoundError:
-                LOGGER.error("Could not locate asset for %s language named %s of video %s ",
+                LOGGER.error("[Transcript migration] Could not locate asset for %s language named %s of video %s ",
                              language_code, transcript_name, video.location)
                 raise
 
@@ -238,7 +240,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
             return 'Failed: language {0} of video {1}'.format(language_code, video.edx_video_id)
 
     except Exception as exc:
-        LOGGER.exception('Exception: %r', text_type(exc))
+        LOGGER.exception('[Transcript migration] Exception: %r', text_type(exc))
         return 'Failed: language {language} of video {video} with exception {exception}'.format(
             language=language_code,
             video=video.edx_video_id,
@@ -246,7 +248,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
         )
 
 
-def push_to_s3(
+def save_transcript_to_storage(
         edx_video_id,
         language_code,
         transcript_content,
@@ -258,7 +260,6 @@ def push_to_s3(
     """
     try:
         result = None
-        LOGGER.info("File Format is %s!!!", file_format)
         edx_video_id = clean_video_id(edx_video_id)
         if force_update:
             result = create_or_update_video_transcript(
@@ -267,7 +268,7 @@ def push_to_s3(
                 dict({'file_format': file_format}),
                 ContentFile(transcript_content)
             )
-            LOGGER.info("Push_to_S3 %s for %s with create_or_update method",
+            LOGGER.info("[Transcript migration] Push_to_storage %s for %s with create_or_update method",
                         True if result else False, edx_video_id)
         else:
             result = create_video_transcript(
@@ -276,10 +277,10 @@ def push_to_s3(
                 file_format,
                 ContentFile(transcript_content)
             )
-            LOGGER.info("Push_to_S3 %s for %s with create method", result, edx_video_id)
+            LOGGER.info("[Transcript migration] Push_to_storage %s for %s with create method", result, edx_video_id)
         return result
     except Exception as err:
-        LOGGER.error("Push_failed: %s", err)
+        LOGGER.exception("[Transcript migration] Push_to_storage_failed: %s", err)
         raise
 
 

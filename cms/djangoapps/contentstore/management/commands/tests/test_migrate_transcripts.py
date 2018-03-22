@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Test for course transcript migration.
+Tests for course transcript migration management command.
 """
 
 from django.test import TestCase
@@ -27,6 +28,10 @@ sprechen sie deutsch?
 1
 00:00:02,720 --> 00:00:05,430
 Ja, ich spreche Deutsch
+
+2
+00:00:6,500 --> 00:00:08,600
+可以用“我不太懂艺术 但我知道我喜欢什么”做比喻
 '''
 
 CRO_SRT_FILEDATA = '''
@@ -44,9 +49,8 @@ VIDEO_DICT_STAR = dict(
     client_video_id='TWINKLE TWINKLE',
     duration=42.0,
     edx_video_id='test_edx_video_id',
-    status="upload",
+    status='upload',
 )
-
 
 class TestArgParsing(TestCase):
     """
@@ -61,8 +65,9 @@ class TestArgParsing(TestCase):
             call_command('migrate_transcripts')
 
     def test_invalid_course(self):
-        with self.assertRaises(CommandError):
-            call_command('migrate_transcripts', "invalid-course")
+        errstring = "Invalid course key: <class 'opaque_keys.edx.locator.CourseLocator'>: invalid-course"
+        with self.assertRaisesRegexp(CommandError, errstring):
+            call_command('migrate_transcripts', 'invalid-course')
 
 
 class MigrateTranscripts(ModuleStoreTestCase):
@@ -72,19 +77,17 @@ class MigrateTranscripts(ModuleStoreTestCase):
     def setUp(self):
         """ Common setup. """
         super(MigrateTranscripts, self).setUp()
-
         self.store = modulestore()._get_modulestore_by_type(ModuleStoreEnum.Type.mongo)
-
         self.course = CourseFactory.create()
 
         video = {
-            "edx_video_id": "test_edx_video_id",
-            "client_video_id": "test1.mp4",
-            "duration": 42.0,
-            "status": "upload",
-            "courses": [unicode(self.course.id)],
-            "encoded_videos": [],
-            "created": datetime.now(pytz.utc)
+            'edx_video_id': 'test_edx_video_id',
+            'client_video_id': 'test1.mp4',
+            'duration': 42.0,
+            'status': 'upload',
+            'courses': [unicode(self.course.id)],
+            'encoded_videos': [],
+            'created': datetime.now(pytz.utc)
         }
         api.create_video(video)
 
@@ -113,22 +116,32 @@ class MigrateTranscripts(ModuleStoreTestCase):
         save_to_store(CRO_SRT_FILEDATA, 'subs_croatian1.srt', 'text/srt', self.video_descriptor.location)
 
     def test_migrated_transcripts_count_with_commit(self):
-
+        """
+        Test migrating transcripts with commit
+        """
         # check that transcript does not exist
         languages = api.get_available_transcript_languages(self.video_descriptor.edx_video_id)
         self.assertEqual(len(languages), 0)
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'hr'))
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'ge'))
 
         # now call migrate_transcripts command and check the transcript availability
         call_command('migrate_transcripts', unicode(self.course.id), '--commit')
 
         languages = api.get_available_transcript_languages(self.video_descriptor.edx_video_id)
         self.assertEqual(len(languages), 2)
+        self.assertTrue(api.is_transcript_available(self.video_descriptor.edx_video_id, 'hr'))
+        self.assertTrue(api.is_transcript_available(self.video_descriptor.edx_video_id, 'ge'))
 
     def test_migrated_transcripts_without_commit(self):
-
+        """
+        Test migrating transcripts as a dry-run
+        """
         # check that transcripts do not exist
         languages = api.get_available_transcript_languages(self.video_descriptor.edx_video_id)
         self.assertEqual(len(languages), 0)
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'hr'))
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'ge'))
 
         # now call migrate_transcripts command and check the transcript availability
         call_command('migrate_transcripts', unicode(self.course.id))
@@ -136,6 +149,8 @@ class MigrateTranscripts(ModuleStoreTestCase):
         # check that transcripts still do not exist
         languages = api.get_available_transcript_languages(self.video_descriptor.edx_video_id)
         self.assertEqual(len(languages), 0)
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'hr'))
+        self.assertFalse(api.is_transcript_available(self.video_descriptor.edx_video_id, 'ge'))
 
     def test_migrate_transcripts_availability(self):
         """
@@ -180,6 +195,9 @@ class MigrateTranscripts(ModuleStoreTestCase):
         self.assertTrue(api.is_transcript_available(self.video_descriptor.edx_video_id, 'ge'))
 
     def test_migrate_transcripts_logging(self):
+        """
+        Test migrate transcripts logging and output
+        """
         expected_log = (
             (LOGGER_NAME,
              'INFO',
@@ -189,19 +207,13 @@ class MigrateTranscripts(ModuleStoreTestCase):
              '[Transcript migration] process for video {} started'.format(unicode(self.video_descriptor.location))),
             (LOGGER_NAME,
              'INFO',
-             u'Already pushed transcript of language hr found: False '),
-            (LOGGER_NAME,
-             'INFO',
-             u'Already pushed transcript of language ge found: False '),
-            (LOGGER_NAME,
-             'INFO',
              '[Transcript migration] process for video {} ended'.format(unicode(self.video_descriptor.location))),
             (LOGGER_NAME,
              'INFO',
              u'[Transcript migration] process for course {} ended'.format(unicode(self.course.id))),
             (LOGGER_NAME,
              'INFO',
-             'Migration result: Language hr transcript of video test_edx_video_id will be migrated'
+             '[Transcript migration] Result: Language hr transcript of video test_edx_video_id will be migrated'
              '\nLanguage ge transcript of video test_edx_video_id will be migrated')
         )
 

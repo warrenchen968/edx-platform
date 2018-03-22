@@ -55,14 +55,17 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Invokes the migrate transcripts enqueue function.
+        """
         if not options.get('all_courses') and len(args) < 1:
             raise CommandError('At least one course or --all-courses must be specified.')
 
-        kwargs = {}
-        for key in ('all_courses', 'force_update', 'commit'):
-            if options.get(key):
-                kwargs[key] = options[key]
-
+        # kwargs = {}
+        # for key in ('all_courses', 'force_update', 'commit'):
+        #     if options.get(key):
+        #         kwargs[key] = options[key]
+        kwargs = {key: options[key] for key in ['all_courses', 'force_update', 'commit'] if options.get(key)}
         try:
             enqueue_async_migrate_transcripts_tasks(
                 course_ids=args,
