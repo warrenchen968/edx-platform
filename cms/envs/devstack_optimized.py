@@ -20,6 +20,8 @@ invoked each time that changes have been made.
 
 import os
 
+#FUTURE MIKE: this line fails in devstack (breaking a11y tests)
+#python manage.py lms --settings=test_static_optimized collectstatic --ignore "fixtures" --ignore "karma_*.js" --ignore "spec" --ignore "spec_helpers" --ignore "spec-helpers" --ignore "xmodule_js" --ignore "geoip" --ignore "sass" --noinput > /edx/app/edxapp/edx-platform/test_root/log/lms-collectstatic.log
 ########################## Devstack settings ###################################
 
 if 'BOK_CHOY_HOSTNAME' in os.environ:

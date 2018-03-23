@@ -1,3 +1,4 @@
+/* eslint-disable */
 describe('HTMLEditingDescriptor', function() {
   beforeEach(() => window.baseUrl = "/static/deadbeef");
   afterEach(() => delete window.baseUrl);

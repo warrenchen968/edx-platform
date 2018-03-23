@@ -1,3 +1,4 @@
+/* eslint-disable */
 describe('MarkdownEditingDescriptor', function() {
   describe('save stores the correct data', function() {
     it('saves markdown from markdown editor', function() {

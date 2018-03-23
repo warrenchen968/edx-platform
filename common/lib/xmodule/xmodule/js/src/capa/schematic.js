@@ -12,6 +12,8 @@
 // for modified nodal analysis (MNA) stamps see
 // http://www.analog-electronics.eu/analog-electronics/modified-nodal-analysis/modified-nodal-analysis.xhtml
 
+/* eslint-disable */
+
 var cktsim = (function() {
 	///////////////////////////////////////////////////////////////////////////////
 	//

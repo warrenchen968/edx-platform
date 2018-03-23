@@ -1,3 +1,4 @@
+/* eslint-disable */
 describe('Annotatable', function() {
     beforeEach(() => loadFixtures('annotatable.html'));
     describe('constructor', function() {

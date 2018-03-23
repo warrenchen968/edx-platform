@@ -1,3 +1,4 @@
+/* eslint-disable */
 describe("TabsEditingDescriptor", function() {
   beforeEach(function() {
     this.isInactiveClass = "is-inactive";

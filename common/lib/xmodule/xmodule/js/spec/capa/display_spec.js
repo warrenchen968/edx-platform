@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -19,7 +20,7 @@ describe('Problem', function() {
     spyOn(SR, 'readText');
     spyOn(SR, 'readTexts');
 
-    // Load this function from spec/helper.coffee
+    // Load this function from spec/helper.js
     // Note that if your test fails with a message like:
     // 'External request attempted for blah, which is not defined.'
     // this msg is coming from the stubRequests function else clause.

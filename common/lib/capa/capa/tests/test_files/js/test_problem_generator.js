@@ -5,6 +5,7 @@
  * DS208: Avoid top-level this
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+/* eslint-disable */
 class TestProblemGenerator extends XProblemGenerator {
 
   constructor(seed, parameters) {

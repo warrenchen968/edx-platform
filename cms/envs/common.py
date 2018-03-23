@@ -801,10 +801,7 @@ PIPELINE_JS = {
     },
 }
 
-PIPELINE_COMPILERS = (
-    'pipeline.compilers.coffee.CoffeeScriptCompiler',
-)
-
+PIPELINE_COMPILERS = None
 PIPELINE_CSS_COMPRESSOR = None
 PIPELINE_JS_COMPRESSOR = None
 
@@ -820,10 +817,6 @@ STATICFILES_IGNORE_PATTERNS = (
     "sass/*/*.scss",
     "sass/*/*/*.scss",
     "sass/*/*/*/*.scss",
-    "coffee/*.coffee",
-    "coffee/*/*.coffee",
-    "coffee/*/*/*.coffee",
-    "coffee/*/*/*/*.coffee",
 
     # Ignore tests
     "spec",

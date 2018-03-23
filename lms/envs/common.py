@@ -480,7 +480,6 @@ system_node_path = os.environ.get("NODE_PATH", NODE_MODULES_ROOT)
 
 node_paths = [
     COMMON_ROOT / "static/js/vendor",
-    COMMON_ROOT / "static/coffee/src",
     system_node_path,
 ]
 NODE_PATH = ':'.join(node_paths)
@@ -1195,10 +1194,6 @@ EDXNOTES_READ_TIMEOUT = 1.5  # time in seconds
 # if parental consent is never required.
 PARENTAL_CONSENT_AGE_LIMIT = 13
 
-################################# Jasmine ##################################
-JASMINE_TEST_DIRECTORY = PROJECT_ROOT + '/static/coffee'
-
-
 ######################### Branded Footer ###################################
 # Constants for the footer used on the site and shared with other sites
 # (such as marketing and the blog) via the branding API.
@@ -1373,12 +1368,8 @@ PIPELINE_UGLIFYJS_BINARY = 'node_modules/.bin/uglifyjs'
 from openedx.core.lib.rooted_paths import rooted_glob
 
 courseware_js = (
-    [
-        'coffee/src/' + pth + '.js'
-        for pth in ['courseware', 'histogram', 'navigation']
-    ] +
-    ['js/' + pth + '.js' for pth in ['ajax-error']] +
-    sorted(rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/modules/**/*.js'))
+    ['js/' + pth + '.js' for pth in ['ajax-error', 'courseware', 'histogram', 'navigation']] +
+    sorted(rooted_glob(PROJECT_ROOT / 'static', 'js/modules/**/*.js'))
 )
 
 proctoring_js = (
@@ -1460,9 +1451,9 @@ dashboard_js = (
 )
 discussion_js = (
     rooted_glob(COMMON_ROOT / 'static', 'common/js/discussion/mathjax_include.js') +
-    rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/customwmd.js') +
-    rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/mathjax_accessible.js') +
-    rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/mathjax_delay_renderer.js') +
+    rooted_glob(PROJECT_ROOT / 'static', 'js/src/customwmd.js') +
+    rooted_glob(PROJECT_ROOT / 'static', 'js/src/mathjax_accessible.js') +
+    rooted_glob(PROJECT_ROOT / 'static', 'js/src/mathjax_delay_renderer.js') +
     sorted(rooted_glob(COMMON_ROOT / 'static', 'common/js/discussion/**/*.js'))
 )
 
@@ -1477,7 +1468,7 @@ discussion_vendor_js = [
     'js/split.js'
 ]
 
-notes_js = sorted(rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/notes/**/*.js'))
+notes_js = sorted(rooted_glob(PROJECT_ROOT / 'static', 'js/notes/**/*.js'))
 instructor_dash_js = sorted(rooted_glob(PROJECT_ROOT / 'static', 'js/instructor_dashboard/**/*.js'))
 
 verify_student_js = [
@@ -1716,13 +1707,13 @@ PIPELINE_CSS = {
 
 
 separately_bundled_js = set(courseware_js + discussion_js + notes_js + instructor_dash_js)
-common_js = sorted(set(rooted_glob(COMMON_ROOT / 'static', 'coffee/src/**/*.js')) - separately_bundled_js)
+common_js = sorted(set(rooted_glob(COMMON_ROOT / 'static', 'js/**/*.js')) - separately_bundled_js)
 xblock_runtime_js = [
     'common/js/xblock/core.js',
     'common/js/xblock/runtime.v1.js',
     'lms/js/xblock/lms.runtime.v1.js',
 ]
-lms_application_js = sorted(set(rooted_glob(PROJECT_ROOT / 'static', 'coffee/src/**/*.js')) - separately_bundled_js)
+lms_application_js = sorted(set(rooted_glob(PROJECT_ROOT / 'static', 'js/**/*.js')) - separately_bundled_js)
 
 PIPELINE_JS = {
     'base_application': {
@@ -1828,10 +1819,6 @@ STATICFILES_IGNORE_PATTERNS = (
     "sass/*/*.scss",
     "sass/*/*/*.scss",
     "sass/*/*/*/*.scss",
-    "coffee/*.coffee",
-    "coffee/*/*.coffee",
-    "coffee/*/*/*.coffee",
-    "coffee/*/*/*/*.coffee",
 
     # Ignore tests
     "spec",
