@@ -65,7 +65,7 @@ class TestArgParsing(TestCase):
             call_command('migrate_transcripts')
 
     def test_invalid_course(self):
-        errstring = "Invalid course key: <class 'opaque_keys.edx.locator.CourseLocator'>: invalid-course"
+        errstring = "Invalid course_key: 'invalid-course'."
         with self.assertRaisesRegexp(CommandError, errstring):
             call_command('migrate_transcripts', 'invalid-course')
 

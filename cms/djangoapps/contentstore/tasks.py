@@ -76,7 +76,7 @@ VIDEO_LEVEL_TIMEOUT_SECONDS = 300
 
 
 def enqueue_async_migrate_transcripts_tasks(
-        course_ids,
+        course_keys,
         all_courses=DEFAULT_ALL_COURSES,
         force_update=DEFAULT_FORCE_UPDATE,
         commit=DEFAULT_COMMIT
@@ -85,7 +85,7 @@ def enqueue_async_migrate_transcripts_tasks(
     Fires new Celery tasks for all the input courses or for all courses.
 
     Arguments:
-        course_ids: Command line course ids as list,
+        course_keys: Command line course ids as list of CourseKey objects,
         all_courses: Run the command for all courses. Default is False,
         force_update: Overwrite file in S3. Default is False,
         commit: Update S3 or dry-run the command to see which transcripts will be affected. Default is False.
@@ -97,8 +97,7 @@ def enqueue_async_migrate_transcripts_tasks(
     }
     if all_courses:
         course_keys = [course.id for course in store.get_course_summaries()]
-    else:
-        course_keys = [CourseKey.from_string(id) for id in course_ids]
+
     try:
         tasks = [
             async_migrate_transcript.s(
