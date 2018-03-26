@@ -70,13 +70,13 @@ class TestArgParsing(TestCase):
             call_command('migrate_transcripts', 'invalid-course')
 
 
-class MigrateTranscripts(ModuleStoreTestCase):
+class TestMigrateTranscripts(ModuleStoreTestCase):
     """
     Tests migrating video transcripts in courses from contentstore to S3
     """
     def setUp(self):
         """ Common setup. """
-        super(MigrateTranscripts, self).setUp()
+        super(TestMigrateTranscripts, self).setUp()
         self.store = modulestore()._get_modulestore_by_type(ModuleStoreEnum.Type.mongo)
         self.course = CourseFactory.create()
 
