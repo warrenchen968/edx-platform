@@ -52,6 +52,7 @@ VIDEO_DICT_STAR = dict(
     status='upload',
 )
 
+
 class TestArgParsing(TestCase):
     """
     Tests for parsing arguments for the `migrate_transcripts` management command

@@ -146,7 +146,7 @@ def async_migrate_transcript(self, course_key, **kwargs):
             english_transcript = video.sub
             LOGGER.info("[Transcript migration] process for video %s started", video.location)
             if english_transcript:
-               all_lang_transcripts.update({'en': video.sub})
+                all_lang_transcripts.update({'en': video.sub})
             for lang, name in all_lang_transcripts.items():
                 transcript_already_present = is_transcript_available(video.edx_video_id, lang)
                 if transcript_already_present and force_update:
