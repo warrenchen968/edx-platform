@@ -1,10 +1,10 @@
 define(
     [
         'jquery', 'underscore',
-        'js/views/abstract_editor', 'js/models/uploads', 'js/views/uploads'
+        'js/views/abstract_editor', 'common/js/components/utils/view_utils', 'js/models/uploads', 'js/views/uploads'
 
     ],
-function($, _, AbstractEditor, FileUpload, UploadDialog) {
+function($, _, AbstractEditor, ViewUtils, FileUpload, UploadDialog) {
     'use strict';
 
     var VideoUploadDialog = UploadDialog.extend({
@@ -21,7 +21,7 @@ function($, _, AbstractEditor, FileUpload, UploadDialog) {
         events: {
             'click .setting-clear': 'clear',
             'click .create-setting': 'addEntry',
-            'click .remove-setting': 'removeEntry',
+            'click .remove-setting': 'deleteTranscript',
             'click .upload-setting': 'upload',
             'change select': 'onChangeHandler'
         },
@@ -137,12 +137,42 @@ function($, _, AbstractEditor, FileUpload, UploadDialog) {
         },
 
         removeEntry: function(event) {
-            event.preventDefault();
-
             var entry = $(event.currentTarget).data('lang');
             this.setValueInEditor(_.omit(this.model.get('value'), entry));
             this.updateModel();
             this.$el.find('.create-setting').removeClass('is-disabled').attr('aria-disabled', false);
+        },
+
+        deleteTranscript: function(event) {
+            var self = this,
+                lang = $(event.currentTarget).data('lang');
+
+            event.preventDefault();
+
+            // Remove the entry if transcript is not yet uploaded, no need to make ajax call
+            if(_.isEmpty(lang) || _.isEmpty(this.model.get('value')[lang])) {
+                self.removeEntry(event);
+                return;
+            }
+
+            ViewUtils.confirmThenRunOperation(
+                gettext('Are you sure you want to remove this transcript?'),
+                gettext('If you remove this transcript, the transcript will not be available for this component.'),
+                gettext('Remove Transcript'),
+                function() {
+                    ViewUtils.runOperationShowingMessage(
+                        gettext('Removing'),
+                        function() {
+                            return $.ajax({
+                                url: self.model.get('urlRoot') + '/' + lang,
+                                type: 'DELETE'
+                            }).done(function() {
+                                self.removeEntry(event);
+                            });
+                        }
+                    );
+                }
+            );
         },
 
         upload: function(event) {
