@@ -235,16 +235,15 @@ class EnrollmentTrackTestCase(_BaseTestCase):
         super(EnrollmentTrackTestCase, cls).setUpClass()
         cls.course = CourseFactory.create()
         cls.course_key = cls.course.id
-        #import pdb; pdb.set_trace()
         CourseMode.objects.create(course_id=cls.course_key, mode_slug=CourseMode.AUDIT, mode_display_name='Audit')
         CourseMode.objects.create(
             course_id=cls.course_key,
             mode_slug=CourseMode.VERIFIED,
             mode_display_name='Verified',
-            min_price=1.5
+            min_price=1.5,
         )
         cls.partitions = partitions_service.get_all_partitions_for_course(cls.course)
-
+        verified_track_partition_id = 2  # This is determined by the order CourseMode objects are created.
         with cls.store.bulk_operations(cls.course.id):
             cls.chapter = ItemFactory.create(
                 parent=cls.course,
@@ -253,11 +252,8 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             cls.vertical1 = ItemFactory.create(
                 parent=cls.chapter,
                 category="vertical",
-                group_access={ENROLLMENT_TRACK_PARTITION_ID: [2]},  # 2 seems to be the value for verified track.  Where is this set?
-                # TODO: Limit this vertical to verified track
+                group_access={ENROLLMENT_TRACK_PARTITION_ID: [verified_track_partition_id]},
             )
-            #cls.vertical1.group_access[] = group_ids
-            #cls.store.update_item(cls.vertical1, self.user.id)
 
             cls.vertical2 = ItemFactory.create(
                 parent=cls.chapter,
