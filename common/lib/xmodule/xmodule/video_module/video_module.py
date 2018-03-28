@@ -16,7 +16,7 @@ import copy
 import json
 import logging
 import random
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from operator import itemgetter
 
 from pkg_resources import resource_string
@@ -717,7 +717,6 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
             for transcript_language in sorted(self.transcripts.keys()):
                 ele = etree.Element('transcript')
                 ele.set('language', transcript_language)
-                # TODO: Remove src attr?
                 ele.set('src', self.transcripts[transcript_language])
                 xml.append(ele)
 
@@ -954,19 +953,26 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
             edx_video_id = self.edx_video_id.strip()
 
         video_asset_elem = xml.find('video_asset')
-        external_transcripts = {}
 
-        # Add trancript from self.sub field.
-        if self.sub:
-            external_transcripts[self.transcript_language] = [subs_filename(self.sub, self.transcript_language)]
+        # Initialize external_transcripts dict.
+        # Example:
+        # {
+        #     'en': ['The_Flash.srt'],
+        #     'es': ['Green_Arrow.srt', 'Harry_Potter.srt']
+        # }
+        external_transcripts = defaultdict(list)
+
+        # Add trancript from self.sub and self.youtube_id_1_0 fields.
+        external_transcripts[self.transcript_language] = [
+            subs_filename(transcript, self.transcript_language)
+            for transcript in [self.sub, self.youtube_id_1_0] if transcript
+        ]
 
         if self.transcripts:
             for language_code, transcript in self.transcripts.items():
-                # If sub transcript exists then attach both transcripts.
-                if language_code in external_transcripts:
-                    external_transcripts[language_code].append(transcript)
-                else:
-                    external_transcripts[language_code] = [transcript]
+                # If same language transcript already exists then attach this transcript.
+                # external_transcripts[language_code] = external_transcripts.get(language_code, [])
+                external_transcripts[language_code].append(transcript)
 
         if video_asset_elem is not None:
             edx_video_id = edxval_api.import_from_xml(

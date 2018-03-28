@@ -1898,7 +1898,6 @@ class VideoDescriptorTest(TestCase, VideoDescriptorTestBase):
         module_system.resources_fs.makedirs(EXPORT_IMPORT_STATIC_DIR, recreate=True)
 
         xml_data = "<video edx_video_id='test_edx_video_id'"
-        transcript_file_names = []
 
         # Prepare self.sub transcript data.
         if sub_id:

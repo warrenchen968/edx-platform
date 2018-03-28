@@ -637,7 +637,7 @@ class VideoDescriptorImportTestCase(unittest.TestCase):
             self.assertEqual(dict(xml.items()), {'mock_attr': ''})
             self.assertEqual(edx_video_id, 'test_edx_video_id')
             self.assertEqual(static_dir, EXPORT_IMPORT_STATIC_DIR)
-            self.assertEqual(external_transcripts, {})
+            self.assertEqual(external_transcripts, {u'en': [u'subs_3_yD_cEKoCk.srt.sjson']})
             self.assertEqual(course_id, 'test_course_id')
             return edx_video_id
 
@@ -666,7 +666,7 @@ class VideoDescriptorImportTestCase(unittest.TestCase):
             edx_video_id,
             module_system.resources_fs,
             EXPORT_IMPORT_STATIC_DIR,
-            {},
+            {u'en': [u'subs_3_yD_cEKoCk.srt.sjson']},
             course_id='test_course_id'
         )
 
