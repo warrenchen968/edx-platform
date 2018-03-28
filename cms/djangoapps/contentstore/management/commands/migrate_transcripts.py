@@ -82,7 +82,7 @@ class Command(BaseCommand):
         if course_ids is None:
             course_ids = []
 
-        if (not len(course_ids) and not all_option) or (len(course_ids) and all_option):
+        if (not course_ids and not all_option) or (course_ids and all_option):
             raise CommandError("At least one course or --all-courses must be specified.")
 
         kwargs = {key: options[key] for key in ['all_courses', 'force_update', 'commit'] if options.get(key)}

@@ -2,20 +2,17 @@
 """
 Tests for course transcript migration management command.
 """
-
+import pytz
+import logging
+from datetime import datetime
 from django.test import TestCase
+from django.core.management import call_command, CommandError
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
-from django.core.management import call_command, CommandError
-from xmodule.video_module.transcripts_utils import download_youtube_subs, save_to_store
-from datetime import datetime
-
-import pytz
+from xmodule.video_module.transcripts_utils import save_to_store
 from edxval import api as api
-
-import logging
 from testfixtures import LogCapture
 
 LOGGER_NAME = "cms.djangoapps.contentstore.tasks"
@@ -57,9 +54,6 @@ class TestArgParsing(TestCase):
     """
     Tests for parsing arguments for the `migrate_transcripts` management command
     """
-    def setUp(self):
-        super(TestArgParsing, self).setUp()
-
     def test_no_args(self):
         errstring = "At least one course or --all-courses must be specified."
         with self.assertRaisesRegexp(CommandError, errstring):
@@ -78,7 +72,7 @@ class TestMigrateTranscripts(ModuleStoreTestCase):
     def setUp(self):
         """ Common setup. """
         super(TestMigrateTranscripts, self).setUp()
-        self.store = modulestore()._get_modulestore_by_type(ModuleStoreEnum.Type.mongo)
+        self.store = modulestore()
         self.course = CourseFactory.create()
 
         video = {
