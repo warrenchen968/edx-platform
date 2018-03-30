@@ -132,6 +132,7 @@ def task_status_callback(results):
     time_limit=COURSE_LEVEL_TIMEOUT_SECONDS
 )
 def async_migrate_transcript(self, course_key, **kwargs):
+    #pylint: disable=unused-argument
     """
     Migrates the transcripts of all videos in a course as a new celery task.
     """
@@ -201,6 +202,7 @@ def get_videos_from_store(course_key):
     time_limit=VIDEO_LEVEL_TIMEOUT_SECONDS
 )
 def async_migrate_transcript_subtask(self, *args, **kwargs):
+    #pylint: disable=unused-argument
     """
          Migrates a transcript of a given video in a course as a new celery task.
     """
