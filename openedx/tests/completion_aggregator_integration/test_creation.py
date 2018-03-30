@@ -380,8 +380,3 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             self.vertical2: (0.5, 1.0),
             self.chapter: (0.5, 1.0),
         }, user=self.user)
-
-
-class CohortTestCase(_BaseTestCase):
-    def setUp(self):
-        partition = UserPartition(id=100, name='cohorts', scheme='cohort', description='Cohorted partition', groups=['A', 'B'])
