@@ -2,12 +2,11 @@
 """
 Tests for course transcript migration management command.
 """
-import pytz
 import logging
 from datetime import datetime
+import pytz
 from django.test import TestCase
 from django.core.management import call_command, CommandError
-from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory

@@ -160,11 +160,11 @@ def async_migrate_transcript(self, course_key, **kwargs):
             transcript_already_present = is_transcript_available(video.edx_video_id, lang)
             if transcript_already_present and force_update:
                 sub_tasks.append(async_migrate_transcript_subtask.s(
-                    video, lang, name, True, **kwargs
+                    video, lang, True, **kwargs
                 ))
             elif not transcript_already_present:
                 sub_tasks.append(async_migrate_transcript_subtask.s(
-                    video, lang, name, False, **kwargs
+                    video, lang, False, **kwargs
                 ))
         LOGGER.info("[Transcript migration] process for video %s ended", video.location)
     callback = task_status_callback.s()
@@ -204,7 +204,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
     """
          Migrates a transcript of a given video in a course as a new celery task.
     """
-    video, language_code, transcript_name, force_update = args
+    video, language_code, force_update = args
     commit = kwargs['commit']
     result = None
     if commit is not True:
@@ -233,6 +233,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
         LOGGER.exception('[Transcript migration] Exception: %r', text_type(exc))
         return 'Failed: language {language} {mime} of video {video} with exception {exception}'.format(
             language=language_code,
+            mime=transcript_mime_type,
             video=video.edx_video_id,
             exception=text_type(exc)
         )
