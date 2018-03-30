@@ -156,7 +156,7 @@ def async_migrate_transcript(self, course_key, **kwargs):
         LOGGER.info("[Transcript migration] process for video %s started", video.location)
         if english_transcript:
             all_lang_transcripts.update({'en': video.sub})
-        for lang, name in all_lang_transcripts.items():
+        for lang, _ in all_lang_transcripts.items():
             transcript_already_present = is_transcript_available(video.edx_video_id, lang)
             if transcript_already_present and force_update:
                 sub_tasks.append(async_migrate_transcript_subtask.s(
@@ -215,7 +215,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
     LOGGER.info("[Transcript migration] process for %s transcript started", language_code)
     try:
         transcript_info = video.get_transcripts_info()
-        transcript_content, transcript_name, transcript_mime_type = get_transcript_from_contentstore(
+        transcript_content, _, transcript_mime_type = get_transcript_from_contentstore(
             video, language_code, Transcript.SJSON, transcript_info)
 
         if not clean_video_id(video.edx_video_id):
