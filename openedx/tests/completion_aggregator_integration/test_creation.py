@@ -61,7 +61,7 @@ class _BaseTestCase(CompletionWaffleTestMixin, SharedModuleStoreTestCase):
                 assert self.aggregator_for(item, user=user).earned == values_map[item][0]
             else:
                 with pytest.raises(Aggregator.DoesNotExist):
-                    self.aggregator_for(item)
+                    self.aggregator_for(item, user=user)
 
 
 class DAGTestCase(_BaseTestCase):
@@ -133,6 +133,31 @@ class DAGTestCase(_BaseTestCase):
             self.sequential: (0.5, 6.0),
             self.chapter: (0.5, 6.0),
         })
+
+    @skip_unless_lms
+    def test_multiple_users(self):
+        self.submit_completion_with_user(self.user, self.problems[2], 1.0)
+        self.submit_completion_with_user(self.user, self.multiparent_problem, 0.5)
+
+        user2 = UserFactory.create()
+        self.submit_completion_with_user(user2, self.problems[0], 1.0)
+        self.submit_completion_with_user(user2, self.problems[1], 1.0)
+        self.submit_completion_with_user(user2, self.problems[2], 1.0)
+        self.submit_completion_with_user(user2, self.problems[3], 1.0)
+
+        self.assert_expected_values({
+            self.vertical1: (1.5, 5.0),
+            self.vertical2: (0.5, 1.0),
+            self.sequential: (2.0, 6.0),
+            self.chapter: (2.0, 6.0),
+        }, user=self.user)
+
+        self.assert_expected_values({
+            self.vertical1: (4.0, 5.0),
+            self.vertical2: (),
+            self.sequential: (4.0, 6.0),
+            self.chapter: (4.0, 6.0),
+        }, user=user2)
 
 
 class LibraryTestCase(_BaseTestCase):
