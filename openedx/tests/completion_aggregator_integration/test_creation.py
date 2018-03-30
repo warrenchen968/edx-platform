@@ -4,12 +4,15 @@ Test creation of aggregate completions when a user works through a course.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from datetime import timedelta
 import logging
 
 from completion.models import BlockCompletion
 from completion.test_utils import CompletionWaffleTestMixin
 from completion_aggregator.models import Aggregator
+from django.utils import timezone
 import pytest
+
 
 from course_modes.models import CourseMode
 from openedx.core.djangolib.testing.utils import skip_unless_lms
@@ -19,7 +22,7 @@ from xmodule.library_tools import LibraryToolsService
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, LibraryFactory
-from xmodule.partitions.partitions import ENROLLMENT_TRACK_PARTITION_ID
+from xmodule.partitions.partitions import ENROLLMENT_TRACK_PARTITION_ID, UserPartition
 from xmodule.partitions import partitions_service
 
 log = logging.getLogger(__name__)
@@ -160,6 +163,40 @@ class DAGTestCase(_BaseTestCase):
         }, user=user2)
 
 
+class HiddenContentTestCase(_BaseTestCase):
+    """
+    Test that hidden content is still counted in aggregators
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super(HiddenContentTestCase, cls).setUpClass()
+        cls.course = CourseFactory.create()
+        cls.course_key = cls.course.id
+        with cls.store.bulk_operations(cls.course.id):
+            cls.chapter = ItemFactory.create(
+                parent=cls.course,
+                category="chapter",
+            )
+            cls.sequential = ItemFactory.create(
+                parent=cls.chapter,
+                category='sequential',
+                due=timezone.now() - timedelta(days=1),
+                hide_after_due=True,
+            )
+            cls.vertical = ItemFactory.create(parent=cls.sequential, category='vertical')
+            cls.htmlblock = ItemFactory.create(parent=cls.vertical, category="html")
+
+    @skip_unless_lms
+    def test_hidden_content_still_calculated(self):
+        self.submit_completion_for(self.htmlblock, 1.0)
+        self.assert_expected_values({
+            self.vertical: (1.0, 1.0),
+            self.sequential: (1.0, 1.0),
+            self.chapter: (1.0, 1.0),
+        })
+
+
 class LibraryTestCase(_BaseTestCase):
     """
     Test handling of library content by completion infrastructure.
@@ -267,6 +304,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             mode_display_name='Verified',
             min_price=1.5,
         )
+
         cls.partitions = partitions_service.get_all_partitions_for_course(cls.course)
         verified_track_partition_id = 2  # This is determined by the order CourseMode objects are created.
         with cls.store.bulk_operations(cls.course.id):
@@ -295,7 +333,7 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             cls.problem3 = ItemFactory.create(
                 parent=cls.vertical2,
                 category="problem",
-                group_access={ENROLLMENT_TRACK_PARTITION_ID: [2]},
+                group_access={ENROLLMENT_TRACK_PARTITION_ID: [verified_track_partition_id]},
             )
 
     def setUp(self):
@@ -342,3 +380,8 @@ class EnrollmentTrackTestCase(_BaseTestCase):
             self.vertical2: (0.5, 1.0),
             self.chapter: (0.5, 1.0),
         }, user=self.user)
+
+
+class CohortTestCase(_BaseTestCase):
+    def setUp(self):
+        partition = UserPartition(id=100, name='cohorts', scheme='cohort', description='Cohorted partition', groups=['A', 'B'])
