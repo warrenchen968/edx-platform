@@ -231,6 +231,21 @@ class EditContainerTest(NestedVerticalTest):
         #note we're expecting the <p> tags to have been removed
         self.assertEqual(component.student_content, "modified content")
 
+    # def test_insert_edit_image(self):
+    #     """
+    #     Test the insert image modal
+    #     """
+    #     image_url = "/static/test.jpg"
+
+    #     unit = self.go_to_unit_page()
+    #     container = unit.xblocks[1].go_to_container()
+    #     component = container.xblocks[1].children[0]
+    #     component.edit()
+
+    #     html_editor = HtmlXBlockEditorView(self.browser, component.locator)
+    #     html_editor.set_image_content(image_url)
+
+
 
 class BaseGroupConfigurationsTest(ContainerBase):
     ALL_LEARNERS_AND_STAFF = XBlockVisibilityEditorView.ALL_LEARNERS_AND_STAFF

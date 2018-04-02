@@ -114,6 +114,7 @@ class ContainerBase(StudioCourseTest):
         """
         self.outline.visit()
         subsection = self.outline.section(section_name).subsection(subsection_name)
+        # import pdb; pdb.set_trace()
         return subsection.expand_subsection().unit(unit_name).go_to()
 
     def do_action_and_verify(self, action, expected_ordering):
