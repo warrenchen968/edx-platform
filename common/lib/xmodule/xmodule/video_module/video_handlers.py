@@ -34,7 +34,8 @@ from .transcripts_utils import (
     TranscriptsGenerationException,
     youtube_speed_dict,
     get_transcript,
-    get_transcript_from_contentstore
+    get_transcript_from_contentstore,
+    remove_subs_from_store,
 )
 from .transcripts_model_utils import (
     is_val_transcript_feature_enabled_for_course
@@ -423,11 +424,22 @@ class VideoStudioViewHandlers(object):
             if request.method == 'DELETE':
                 response = Response(status=200)
 
-                edx_video_id = clean_video_id(self.edx_video_id)
                 if edx_video_id:
                     edxval_api.delete_video_transcript(video_id=edx_video_id, language_code=language)
+
+                if language == u'en':
+                    # remove any transcript file from content store for the video ids
+                    possible_sub_ids = [self.sub, self.youtube_id_1_0] + get_html5_ids(self.html5_sources)
+                    for sub_id in possible_sub_ids:
+                        remove_subs_from_store(sub_id, self, language)
+
+                    # update metadata as `en` can also be present in `transcripts` field
+                    remove_subs_from_store(self.transcripts.pop(language, None), self, language)
+
+                    # also empty `sub` field
+                    self.sub = ''
                 else:
-                    self.transcripts.pop(language, None)
+                    remove_subs_from_store(self.transcripts.pop(language, None), self, language)
 
                 return response
 

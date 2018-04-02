@@ -165,7 +165,8 @@ function($, _, AbstractEditor, ViewUtils, FileUpload, UploadDialog) {
                         function() {
                             return $.ajax({
                                 url: self.model.get('urlRoot') + '/' + lang,
-                                type: 'DELETE'
+                                type: 'DELETE',
+                                data: JSON.stringify({lang: lang, edx_video_id: edx_video_id})
                             }).done(function() {
                                 self.removeEntry(event);
                             });
