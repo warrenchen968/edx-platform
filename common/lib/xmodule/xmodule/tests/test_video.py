@@ -24,6 +24,7 @@ from mock import ANY, Mock, patch, MagicMock
 import ddt
 
 from django.conf import settings
+from django.test import TestCase
 from django.test.utils import override_settings
 
 from fs.osfs import OSFS
@@ -259,7 +260,7 @@ class TestCreateYouTubeUrl(VideoDescriptorTestBase):
 
 
 @ddt.ddt
-class VideoDescriptorImportTestCase(unittest.TestCase):
+class VideoDescriptorImportTestCase(TestCase):
     """
     Make sure that VideoDescriptor can import an old XML-based video correctly.
     """

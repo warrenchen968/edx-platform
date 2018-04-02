@@ -100,6 +100,7 @@ log = logging.getLogger(__name__)
 _ = lambda text: text
 
 
+EXPORT_IMPORT_COURSE_DIR = u'course'
 EXPORT_IMPORT_STATIC_DIR = u'static'
 
 
@@ -948,13 +949,16 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
             resource_fs (OSFS): Import file system.
             course_id (str): course id
         """
-        edx_video_id = ''
-        if self.edx_video_id is not None:
-            edx_video_id = self.edx_video_id.strip()
+        edx_video_id = clean_video_id(self.edx_video_id)
 
+        # Create video_asset is not already present.
         video_asset_elem = xml.find('video_asset')
+        if video_asset_elem is None:
+            video_asset_elem = etree.Element('video_asset')
+            video_asset_elem.set('duration', '0.0')
+            video_asset_elem.set('client_video_id', u'External Video')
 
-        # Initialize external_transcripts dict.
+        # This will be a dict containing the list of names of the external transcripts.
         # Example:
         # {
         #     'en': ['The_Flash.srt'],
@@ -971,18 +975,16 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
         if self.transcripts:
             for language_code, transcript in self.transcripts.items():
                 # If same language transcript already exists then attach this transcript.
-                # external_transcripts[language_code] = external_transcripts.get(language_code, [])
                 external_transcripts[language_code].append(transcript)
 
-        if video_asset_elem is not None:
-            edx_video_id = edxval_api.import_from_xml(
-                video_asset_elem,
-                edx_video_id,
-                resource_fs,
-                EXPORT_IMPORT_STATIC_DIR,
-                external_transcripts,
-                course_id=course_id
-            )
+        edx_video_id = edxval_api.import_from_xml(
+            video_asset_elem,
+            edx_video_id,
+            resource_fs,
+            EXPORT_IMPORT_STATIC_DIR,
+            external_transcripts,
+            course_id=course_id
+        )
 
         return edx_video_id
 

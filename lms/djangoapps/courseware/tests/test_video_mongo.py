@@ -42,7 +42,7 @@ from xmodule.tests.test_import import DummySystem
 from xmodule.tests.test_video import VideoDescriptorTestBase, instantiate_descriptor
 from xmodule.video_module import VideoDescriptor, bumper_utils, rewrite_video_url, video_utils
 from xmodule.video_module.transcripts_utils import Transcript, save_to_store, subs_filename
-from xmodule.video_module.video_module import EXPORT_IMPORT_STATIC_DIR
+from xmodule.video_module.video_module import EXPORT_IMPORT_STATIC_DIR, EXPORT_IMPORT_COURSE_DIR
 from xmodule.x_module import STUDENT_VIEW
 
 from .helpers import BaseTestXmodule
@@ -1534,7 +1534,8 @@ class VideoDescriptorTest(TestCase, VideoDescriptorTestBase):
         self.descriptor.runtime.handler_url = MagicMock()
         self.descriptor.runtime.course_id = MagicMock()
         self.temp_dir = mkdtemp()
-        self.file_system = OSFS(self.temp_dir)
+        file_system = OSFS(self.temp_dir)
+        self.file_system = file_system.makedir(EXPORT_IMPORT_COURSE_DIR, recreate=True)
         self.addCleanup(shutil.rmtree, self.temp_dir)
 
     def get_video_transcript_data(self, video_id, language_code='en', file_format='srt', provider='Custom'):
@@ -1578,7 +1579,10 @@ class VideoDescriptorTest(TestCase, VideoDescriptorTestBase):
         """
         language_code = 'ar'
         transcript_file_name = 'test_edx_video_id-ar.srt'
-        expected_transcript_path = combine(self.temp_dir, combine(EXPORT_IMPORT_STATIC_DIR, transcript_file_name))
+        expected_transcript_path = combine(
+            combine(self.temp_dir, EXPORT_IMPORT_COURSE_DIR),
+            combine(EXPORT_IMPORT_STATIC_DIR, transcript_file_name)
+        )
         self.descriptor.edx_video_id = 'test_edx_video_id'
 
         create_profile('mobile')
