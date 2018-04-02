@@ -977,15 +977,15 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
                 # If same language transcript already exists then attach this transcript.
                 external_transcripts[language_code].append(transcript)
 
-        edx_video_id = edxval_api.import_from_xml(
-            video_asset_elem,
-            edx_video_id,
-            resource_fs,
-            EXPORT_IMPORT_STATIC_DIR,
-            external_transcripts,
-            course_id=course_id
-        )
-
+        if edxval_api:
+            edx_video_id = edxval_api.import_from_xml(
+                video_asset_elem,
+                edx_video_id,
+                resource_fs,
+                EXPORT_IMPORT_STATIC_DIR,
+                external_transcripts,
+                course_id=course_id
+            )
         return edx_video_id
 
 

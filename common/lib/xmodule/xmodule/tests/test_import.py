@@ -2,7 +2,8 @@
 
 import datetime
 import ddt
-import unittest
+
+from django.test import TestCase
 
 from fs.osfs import OSFS
 from lxml import etree
@@ -59,7 +60,7 @@ class DummySystem(ImportSystem):
         raise Exception("Shouldn't be called")
 
 
-class BaseCourseTestCase(unittest.TestCase):
+class BaseCourseTestCase(TestCase):
     '''Make sure module imports work properly, including for malformed inputs'''
     @staticmethod
     def get_system(load_error_modules=True, library=False):
