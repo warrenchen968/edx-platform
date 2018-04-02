@@ -947,7 +947,7 @@ class @HTMLEditingDescriptor
       ###
       Translators: this is a toolbar button tooltip from the raw HTML editor displayed in the browser when a user needs to edit HTML
       ###
-      title : gettext('Insert/Edit Image'),
+      title : gettext('Insert/edit image'),
       icon: 'image',
       onclick : @openImageModal
     })

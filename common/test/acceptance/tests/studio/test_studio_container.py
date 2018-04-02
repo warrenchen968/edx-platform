@@ -6,9 +6,12 @@ for displaying containers within units.
 import datetime
 
 import ddt
+# from django.conf import settings
 from nose.plugins.attrib import attr
+# from waffle.testutils import override_switch
 
 from base_studio_test import ContainerBase
+# from cms.djangoapps.contentstore.config import waffle
 from common.test.acceptance.fixtures.course import XBlockFixtureDesc
 from common.test.acceptance.pages.lms.courseware import CoursewarePage
 from common.test.acceptance.pages.lms.create_mode import ModeCreationPage
@@ -231,19 +234,22 @@ class EditContainerTest(NestedVerticalTest):
         #note we're expecting the <p> tags to have been removed
         self.assertEqual(component.student_content, "modified content")
 
-    # def test_insert_edit_image(self):
-    #     """
-    #     Test the insert image modal
-    #     """
-    #     image_url = "/static/test.jpg"
+    # @override_switch(
+    #     '{}.{}'.format(waffle.WAFFLE_NAMESPACE, waffle.ENABLE_IN_CONTEXT_IMAGE_SELECTION),
+    #     active=True)
+    def test_insert_edit_image(self):
+        """
+        Test the insert image modal
+        """
+        image_url = "/static/test.jpg"
 
-    #     unit = self.go_to_unit_page()
-    #     container = unit.xblocks[1].go_to_container()
-    #     component = container.xblocks[1].children[0]
-    #     component.edit()
+        unit = self.go_to_unit_page()
+        container = unit.xblocks[1].go_to_container()
+        component = container.xblocks[1].children[0]
+        component.edit()
 
-    #     html_editor = HtmlXBlockEditorView(self.browser, component.locator)
-    #     html_editor.set_image_content(image_url)
+        html_editor = HtmlXBlockEditorView(self.browser, component.locator)
+        html_editor.set_image_content(image_url)
 
 
 

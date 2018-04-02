@@ -59,11 +59,11 @@ class HtmlXBlockEditorView(XBlockEditorView):
 
         self.q(css='.mce-foot .mce-primary').click()
 
-    # def set_image_content(self, content):
-    #     """Opens modal and inserts image
-    #     Arguments:
-    #         content (str): The image path to use
-    #     """
-    #     self.q(css=self.editor_mode_css).click()
-    #     self.q(css='[aria-label="Insert/Edit Image"]').click()
-    #     import pdb; pdb.set_trace()
+    def set_image_content(self, content):
+        """Opens modal and inserts image
+        Arguments:
+            content (str): The image path to use
+        """
+        self.q(css=self.editor_mode_css).click()
+        self.q(css="[aria-label='Insert/edit image'] button").click()
+        # import pdb; pdb.set_trace()
