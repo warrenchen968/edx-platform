@@ -22,7 +22,7 @@ from third_party_auth.pipeline import get as get_partial_pipeline
 from third_party_auth.provider import Registry
 
 try:
-    from consent.models import DataSharingConsent, DataSharingConsentPage
+    from consent.models import DataSharingConsent, DataSharingConsentTextOverrides
     from enterprise.models import EnterpriseCustomer, EnterpriseCustomerUser
 except ImportError:
     pass
@@ -532,10 +532,10 @@ def get_consent_notification_data(enterprise_customer):
     title_template = None
     message_template = None
     try:
-        consent_page = DataSharingConsentPage.objects.get(enterprise_customer_id=enterprise_customer['uuid'])
+        consent_page = DataSharingConsentTextOverrides.objects.get(enterprise_customer_id=enterprise_customer['uuid'])
         title_template = consent_page.declined_notification_title
         message_template = consent_page.declined_notification_message
-    except DataSharingConsentPage.DoesNotExist:
+    except DataSharingConsentTextOverrides.DoesNotExist:
         LOGGER.info(
             "DataSharingConsentPage object doesn't exit for {enterprise_customer_name}".format(
                 enterprise_customer_name=enterprise_customer['name']
