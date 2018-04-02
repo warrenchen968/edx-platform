@@ -217,7 +217,7 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
     LOGGER.info("[Transcript migration] process for %s transcript started", language_code)
     try:
         transcript_info = video.get_transcripts_info()
-        transcript_content, _, transcript_mime_type = get_transcript_from_contentstore(
+        transcript_content, _, _ = get_transcript_from_contentstore(
             video, language_code, Transcript.SJSON, transcript_info)
 
         if not clean_video_id(video.edx_video_id):
@@ -233,9 +233,8 @@ def async_migrate_transcript_subtask(self, *args, **kwargs):
             )
     except (NotFoundError, TranscriptsGenerationException, ValCannotCreateError) as exc:
         LOGGER.exception('[Transcript migration] Exception: %r', text_type(exc))
-        return 'Failed: language {language} {mime} of video {video} with exception {exception}'.format(
+        return 'Failed: language {language} of video {video} with exception {exception}'.format(
             language=language_code,
-            mime=transcript_mime_type,
             video=video.edx_video_id,
             exception=text_type(exc)
         )
